@@ -36,16 +36,21 @@ except ValueError:
 
 
 try:
-    
     for i in range(count):
+        # Adding +1 to start from 1
         i+= 1
         headers = {
             'User-Agent': user_agent()
         }
+        # Parsing URL for crawling authors
         req_url = url + '/?author=%d' % (i)
+        # Making GET request
         r = requests.get(req_url, headers=headers)
+        # Fetching page content
         soup = bs4(r.text, 'html.parser')
+        # Finding error message for 404
         idenf= soup.findAll(text='Oops! That page can’t be found.')
+        # Debug print
         print(idenf)
 except KeyboardInterrupt:
     sys.exit()
