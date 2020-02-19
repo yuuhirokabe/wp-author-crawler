@@ -35,6 +35,7 @@ except ValueError:
     sys.exit()
 
 
+# Start crawling page
 try:
     for i in range(count):
         # Adding +1 to start from 1
