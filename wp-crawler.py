@@ -2,7 +2,13 @@ from bs4 import BeautifulSoup as bs4
 import requests
 import sys
 import random
+from colored import fg, attr
+from time import time
 
+
+# Setting variables
+users = 0 # Active Users
+broken = 0 # Broken Users
 
 # Randomizing User-Agent's
 def user_agent():
@@ -16,8 +22,6 @@ def user_agent():
     ]
     i = random.randrange(0, len(agents))
     return agents[i]
-
-print(user_agent())
 
 # Requesting user to input website url to crawl
 try:
@@ -34,30 +38,44 @@ except ValueError:
     print('[-] Please type an integer!')
     sys.exit()
 
-
 # Start crawling page
 try:
+    start = time()
     for i in range(count):
         # Adding +1 to start from 1
         i+= 1
         headers = {
             'User-Agent': user_agent()
         }
+        # Setting proxy
+        proxies = {
+            'http':'socks5h://127.0.0.1:9050',
+            'https':'socks5h://127.0.0.1:9050'
+        }
         # Parsing URL for crawling authors
         req_url = url + '/?author=%d' % (i)
         # Making GET request
-        r = requests.get(req_url, headers=headers)
+        r = requests.get(req_url, headers=headers, proxies=proxies)
         # Fetching page content
         soup = bs4(r.text, 'html.parser')
         # Finding error message for 404
-        idenf= soup.findAll(text='Oops! That page can’t be found.')
-        # Debug print
-        print(idenf)
+        found = soup.find('body', attrs={'class':'author'})
+        if found != None:
+            if r.history:
+                users = users + 1
+                name = r.url.split('/')[4]
+                print(f'%s[+] Found user {name} with id {i}, url: {r.url}%s' % (fg(2), attr('reset')))
+            else:
+                broken = broken + 1
+                print(f'%s[/] Found broken user with id {i}, url: {r.url}%s' % (fg(3), attr('reset')))
+        else:
+            print(f'%s[-] User with id {i} not found...%s' % (fg(1), attr('reset')))
+    finish = time() - start
+    minutes = round(finish / 60)
+    seconds = round(finish % 60)
+    print(f'{minutes} min. {seconds} sec. elapsed, found {users} users')
 except KeyboardInterrupt:
     sys.exit()
 except requests.exceptions.MissingSchema:
     print('[-] Please type url with http(s)!')
-    sys.exit()
-except:
-    print('[-] Entered URL is invalid, please type valid url...')
     sys.exit()
